@@ -10,6 +10,7 @@
   // 1 for contract Factory
   // 2 for Saga Coin
   // 3 for FundMe
+  // 4 for Lottery
   let selector = 0;
 </script>
 
@@ -35,6 +36,13 @@
             on:click={() => {
               selector = 3;
             }}>Fund Me</button
+          >
+          <button
+            id="Lottery"
+            class="btn"
+            on:click={() => {
+              selector = 4;
+            }}>Lottery</button
           >
           <button
             id="fact"

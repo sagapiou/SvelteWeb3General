@@ -20,6 +20,7 @@
     : false;
   $: slicedSigner = sliceAddress($ethersStore.signerAddress);
   $: balanceSigner = roundedBalanceEthFromWei($ethersStore.balance, 8);
+  $: connectedChain = $ethersStore.selectedChainId;
   //  $: balance = $connected && $selectedAccount ? $web3.eth.getBalance($selectedAccount) : ""
 </script>
 
@@ -32,6 +33,15 @@
       <div class="flex-none normal-case text-xl font-bold " />
       {#if $ethersStore.walletConnected == true}
         <div class="stats shadow">
+          <div class="flex-none">
+            <div class="stat">
+              <div class="stat-title">CHAIN</div>
+              <div class="stat-title font-bold">{connectedChain}</div>
+              <!-- <div class="stat-actions">
+                                <button class="btn btn-sm btn-success">Add funds</button>
+                            </div> -->
+            </div>
+          </div>
           <div class="flex-none">
             <div class="stat">
               <div class="stat-title">BALANCE</div>

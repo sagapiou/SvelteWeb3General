@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 
 // to use the mainnet
 //const network = "homestead";
-const network = "rinkeby";
+const network = "sepolia";
 
 // default provider
 // const defaultProvider = ethers.getDefaultProvider(network, {
@@ -23,7 +23,9 @@ const ethersStore = writable({
   eipProvider: null,
   evmProviderType: "EIP1193", // eg metamask
   contract: "", //erc20
+  contractLottery: "", //Lottery Contract
   changedContract: false,
+  changedLotteryContract: false,
   fundMeContract: "",
 });
 
@@ -84,6 +86,15 @@ const customEthersStore = {
       };
     });
   },
+  updateLotteryContract: (_contract) => {
+    ethersStore.update((state) => {
+      return {
+        ...state,
+        contractLottery: _contract,
+        changedLotteryContract: true,
+      };
+    });
+  },
   resetContract: (_contract) => {
     ethersStore.update((state) => {
       return {
@@ -93,11 +104,21 @@ const customEthersStore = {
       };
     });
   },
+  resetLotteryContract: (_contract) => {
+    ethersStore.update((state) => {
+      return {
+        ...state,
+        contractLottery: "",
+        changedLotteryContract: false,
+      };
+    });
+  },
   resetContractChanged: (_contract) => {
     ethersStore.update((state) => {
       return {
         ...state,
         changedContract: false,
+        changedLotteryContract: false,
       };
     });
   },

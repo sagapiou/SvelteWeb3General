@@ -4,6 +4,7 @@
   import ContractFactory from "./contractFactory.svelte";
   import ethersStore from "../store/ethersStore.js";
   import ContractFundMe from "./contractFundMe.svelte";
+  import ContractLottery from "./contractLottery.svelte";
 
   export let selector;
 
@@ -68,6 +69,15 @@
     <div class="grid h-200 card bg-base-300 rounded-box place-items-center">
       <!-- <ContractFactory on:contractSelected={selectedContract} /> -->
       <ContractFundMe />
+    </div>
+  </div>
+{/if}
+
+{#if selector == 4}
+  <div class="flex flex-col w-full">
+    <div class="grid h-200 card bg-base-300 rounded-box place-items-center">
+      <!-- <ContractFactory on:contractSelected={selectedContract} /> -->
+      <ContractLottery />
     </div>
   </div>
 {/if}
