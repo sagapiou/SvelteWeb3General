@@ -29,20 +29,13 @@
   let sendTransactionWithdraw = false;
   let contractBalance;
   let contractBalanceDec;
-  let addressOf;
-  let balanceOf;
-  let balanceOfDec;
-  let funderAmount;
-  let funderAmountDec;
-  let funder;
-  let funderAddress;
-  let fundAmount;
-  let idx;
   let transactionReceipt = null;
   let ercDecimals = 18;
   let contractSelected = false;
   let contractAddresses = [];
   let selectedContract;
+  let playerAddress;
+  let playerIdx = 0;
 
   onMount(() => {
     try {
@@ -80,6 +73,7 @@
     await getLastTimeStamp();
     await getRaffleState();
     await getContractBalance();
+    await loadAddressAtIdx();
     slicedWinner = sliceAddress(recentWinner);
     entranceFeeEth = roundedBalanceEthFromWei(entranceFeeWei, 2);
   }
@@ -117,6 +111,14 @@
     } catch (error) {
       somethingsUp = true;
       transactionError = { error };
+    }
+  }
+
+  async function loadAddressAtIdx() {
+    try {
+      playerAddress = await contractToLoad.getPlayer(playerIdx);
+    } catch (error) {
+      playerAddress = "Does not exist";
     }
   }
 
@@ -316,6 +318,60 @@
       <tr>
         <div class="h-5 m-1" />
       </tr>
+      <tr>
+        <div class="stats shadow">
+          <div class="stat">
+            <div class="stat-figure text-secondary">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                class="inline-block w-8 h-8 stroke-current"
+                ><path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                /></svg
+              >
+            </div>
+            <div class="stat-title">Player Address</div>
+            <div class="stat-desc">{playerAddress}</div>
+            <div class="stat-desc">Index : {playerIdx}</div>
+            <tr>
+              <div class="h-1 m-1" />
+            </tr>
+            <div class="stat-desc">
+              Player:
+              <select
+                class="select select-info w-full max-w-xs"
+                bind:value={playerIdx}
+                on:change={() => {
+                  //dispatch("contractSelected", selectedContract)
+                  loadAddressAtIdx();
+                }}
+              >
+                <option disabled selected />
+                <option>0</option>
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+                <option>7</option>
+                <option>8</option>
+                <option>9</option>
+                <option>10</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </tr>
+      <tr>
+        <div class="h-5 m-1" />
+      </tr>
+      <div class="divider">Send Transactions</div>
       <tr>
         <div class="join">
           <div>
