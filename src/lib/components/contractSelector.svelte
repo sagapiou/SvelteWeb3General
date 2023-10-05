@@ -1,10 +1,11 @@
 <script>
-  import ContractgetData from "./contractGetData.svelte";
-  import ContractSetData from "./contractSetData.svelte";
-  import ContractFactory from "./contractFactory.svelte";
+  import ContractgetData from "./contractErc20GetData.svelte";
+  import ContractSetData from "./contractErc20SetData.svelte";
+  import ContractFactory from "./contractErc20Factory.svelte";
   import ethersStore from "../store/ethersStore.js";
   import ContractFundMe from "./contractFundMe.svelte";
   import ContractLottery from "./contractLottery.svelte";
+  import ContractERC721 from "./contractERC721General.svelte";
 
   export let selector;
 
@@ -67,7 +68,6 @@
 {#if selector == 3}
   <div class="flex flex-col w-full">
     <div class="grid h-200 card bg-base-300 rounded-box place-items-center">
-      <!-- <ContractFactory on:contractSelected={selectedContract} /> -->
       <ContractFundMe />
     </div>
   </div>
@@ -76,8 +76,15 @@
 {#if selector == 4}
   <div class="flex flex-col w-full">
     <div class="grid h-200 card bg-base-300 rounded-box place-items-center">
-      <!-- <ContractFactory on:contractSelected={selectedContract} /> -->
       <ContractLottery />
+    </div>
+  </div>
+{/if}
+
+{#if selector == 5}
+  <div class="flex flex-col w-full">
+    <div class="grid h-200 card bg-base-300 rounded-box place-items-center">
+      <ContractERC721 />
     </div>
   </div>
 {/if}

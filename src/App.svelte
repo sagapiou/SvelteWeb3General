@@ -7,10 +7,11 @@
   import ContractERC20 from "./lib/components/contractSelector.svelte";
 
   // 0 for no contracts
-  // 1 for contract Factory
+  // 1 for contract Factory ERC20
   // 2 for Saga Coin
   // 3 for FundMe
   // 4 for Lottery
+  // 5 for ERC721
   let selector = 0;
 </script>
 
@@ -55,8 +56,8 @@
             id="contract"
             class="btn"
             on:click={() => {
-              selector = 2;
-            }}>Saga ERC20</button
+              selector = 5;
+            }}>NFTs</button
           >
         </div>
       {/if}
