@@ -6,6 +6,7 @@
   import ContractFundMe from "./contractFundMe.svelte";
   import ContractLottery from "./contractLottery.svelte";
   import ContractERC721 from "./contractERC721General.svelte";
+  import ContractStableCoin from "./contractStablecoin.svelte";
 
   export let selector;
 
@@ -85,6 +86,14 @@
   <div class="flex flex-col w-full">
     <div class="grid h-200 card bg-base-300 rounded-box place-items-center">
       <ContractERC721 />
+    </div>
+  </div>
+{/if}
+
+{#if selector == 6}
+  <div class="flex flex-col w-full">
+    <div class="grid h-200 card bg-base-300 rounded-box place-items-center">
+      <ContractStableCoin />
     </div>
   </div>
 {/if}

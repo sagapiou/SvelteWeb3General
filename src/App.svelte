@@ -12,20 +12,21 @@
   // 3 for FundMe
   // 4 for Lottery
   // 5 for ERC721
+  // 6 for Stablecoin
   let selector = 0;
 </script>
 
 <div class="flex flex-col h-screen justify-between">
   <Header />
 
-  <main class="mb-auto h-10 ">
-    <div class="w-full ">
+  <main class="mb-auto h-1 m-1  ">
+    <div>
       <ConnectWallet />
       {#if $ethersStore.walletConnected == true}
-        <div class="btn-group">
+        <div class="join join-vertical lg:join-horizontal">
           <button
             id="none"
-            class="btn btn-active"
+            class="btn btn-active join-item"
             on:click={() => {
               selector = 0;
               let fact = document.getElementById("mobile-menu");
@@ -33,13 +34,13 @@
           >
           <button
             id="FundMe"
-            class="btn"
+            class="btn join-item"
             on:click={() => {
               selector = 3;
             }}>Fund Me</button
           >
           <button
-            id="Lottery"
+            id="Lottery join-item"
             class="btn"
             on:click={() => {
               selector = 4;
@@ -47,22 +48,31 @@
           >
           <button
             id="fact"
-            class="btn"
+            class="btn join-item"
             on:click={() => {
               selector = 1;
             }}>Factory ERC20</button
           >
+
           <button
-            id="contract"
+            id="contract join-item"
             class="btn"
             on:click={() => {
               selector = 5;
             }}>NFTs</button
           >
+
+          <button
+            id="contract join-item"
+            class="btn"
+            on:click={() => {
+              selector = 6;
+            }}>Stablecoin</button
+          >
         </div>
       {/if}
       <!-- Leave space between the navigator and the content -->
-      <div class="h-2 m-4" />
+      <div class="h-1 m-1 " />
       <ContractERC20 {selector} />
     </div>
   </main>
