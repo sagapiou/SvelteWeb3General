@@ -24,51 +24,57 @@
       <ConnectWallet />
       {#if $ethersStore.walletConnected == true}
         <div class="join join-vertical lg:join-horizontal">
-          <button
-            id="none"
-            class="btn btn-active join-item"
-            on:click={() => {
-              selector = 0;
-              let fact = document.getElementById("mobile-menu");
-            }}>None</button
-          >
-          <button
-            id="FundMe"
-            class="btn join-item"
-            on:click={() => {
-              selector = 3;
-            }}>Fund Me</button
-          >
-          <button
-            id="Lottery join-item"
-            class="btn"
-            on:click={() => {
-              selector = 4;
-            }}>Lottery</button
-          >
-          <button
-            id="fact"
-            class="btn join-item"
-            on:click={() => {
-              selector = 1;
-            }}>Factory ERC20</button
-          >
-
-          <button
-            id="contract join-item"
-            class="btn"
-            on:click={() => {
-              selector = 5;
-            }}>NFTs</button
-          >
-
-          <button
-            id="contract join-item"
-            class="btn"
-            on:click={() => {
-              selector = 6;
-            }}>Stablecoin</button
-          >
+          <ul class="menu menu-horizontal bg-base-200">
+            <li>
+              <button
+                id="none"
+                on:click={() => {
+                  selector = 0;
+                  let fact = document.getElementById("mobile-menu");
+                }}>None</button
+              >
+            </li>
+            <li>
+              <button
+                id="FundMe"
+                on:click={() => {
+                  selector = 3;
+                }}>Fund Me</button
+              >
+            </li>
+            <li>
+              <button
+                id="Lottery join-item"
+                on:click={() => {
+                  selector = 4;
+                }}>Lottery</button
+              >
+            </li>
+            <li>
+              <button
+                id="fact"
+                on:click={() => {
+                  selector = 1;
+                }}>Factory ERC20</button
+              >
+            </li>
+            <li>
+              <button
+                id="contract join-item"
+                on:click={() => {
+                  selector = 5;
+                }}>NFTs</button
+              >
+            </li>
+            <li>
+              <button
+                id="contract join-item"
+                on:click={() => {
+                  selector = 6;
+                }}>Stablecoin</button
+              >
+            </li>
+          </ul>
         </div>
       {/if}
       <!-- Leave space between the navigator and the content -->

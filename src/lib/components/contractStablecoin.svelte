@@ -6,6 +6,7 @@
     connectSignerToContract,
   } from "../utils/ethersContracts.js";
   import abiStablecoin from "../../../constants/abiStablecoin.json";
+  import abiERC20 from "../../../constants/abiERC.json";
   import addressesStableCoin from "../../../constants/contractStablecoinAddresses.json";
   import { onMount } from "svelte";
   import { createEventDispatcher } from "svelte";
@@ -17,6 +18,7 @@
 
   let chainSupported = false;
   let contractToLoad;
+  let contractToLoadERC;
   let somethingsUp = false;
   let transactionError = null;
   let dscMinHealth;
@@ -35,28 +37,45 @@
   let hfAddress;
   let hfAddressToSearch;
 
+  let colAddress;
+  let colAddressToSearch;
+  let colAddressWei;
+  let colAddressDsc;
+  let colAddressDscWei;
+
   let sendTransactionDepositAndMint = false;
   let dmTokenCollateralAddress;
   let dmAmountCollateral;
   let dmAmountDSCToMint;
 
+  let sendTransactionRedeemAndBurn = false;
+  let rbTokenCollateralAddress;
+  let rbAmountCollateral;
+  let rbAmountDSCToMint;
+
   let sendTransactionDeposit = false;
   let dTokenCollateralAddress;
   let dAmountCollateral;
-  let dAmountDSCToMint;
+
+  let sendTransactionRedeem = false;
+  let rTokenCollateralAddress;
+  let rAmountCollateral;
 
   let cbAddress;
   let cbBalance;
   let cbBalanceWei;
   let cbToken;
 
-  let nftTokenCounter;
+  let sendTransactionMint = false;
+  let mintAmountDsc;
+
+  let sendTransactionBurn = false;
+  let burnAmountDsc;
+
   let nftTokenSelected;
   let nftTokenSelectedStatus;
   let tokenStatus;
   let tokenStatusId;
-  let entranceFeeWei;
-  let sendTransactionTransfer = false;
   let sendTransactionTransferChangeMood = false;
   let contractBalance;
   let contractBalanceDec;
@@ -68,8 +87,6 @@
   let playerAddress;
   let tokenOwnerAddress;
   let tokenSlicedOwnerAddress;
-  let nrOfTokensOwner;
-  let nftTokensOwner;
   let selectedTokenUri;
   let selectedTokenUriImage;
   let nftTokenSelectedChangeState;
@@ -168,26 +185,6 @@
     }
   }
 
-  async function loadAddressAtIdx() {
-    try {
-      tokenOwnerAddress = await contractToLoad.ownerOf(nftTokenSelected);
-      tokenSlicedOwnerAddress = sliceAddress(tokenOwnerAddress);
-    } catch (error) {
-      playerAddress = "Does not exist";
-    }
-  }
-
-  async function getTokenUri() {
-    try {
-      selectedTokenUri = await contractToLoad.tokenURI(nftTokenSelected);
-      const json = window.atob(selectedTokenUri.substring(29));
-      const result = JSON.parse(json);
-      selectedTokenUriImage = result.image;
-    } catch (error) {
-      playerAddress = "Does not exist";
-    }
-  }
-
   async function calculateHF() {
     try {
       hfCalculation = getPercentageOf(
@@ -201,7 +198,21 @@
 
   async function getHF() {
     try {
-      hfAddress = await contractToLoad.getHealthFactor(hfAddressToSearch);
+      hfAddress = getPercentageOf(
+        await contractToLoad.getHealthFactor(hfAddressToSearch)
+      );
+    } catch (error) {
+      somethingsUp = true;
+      transactionError = { error };
+    }
+  }
+
+  async function getColUSD() {
+    try {
+      [colAddressDscWei, colAddressWei] =
+        await contractToLoad.getAccountInformation(colAddressToSearch);
+      colAddress = roundedBalanceEthFromWei(colAddressWei, 18);
+      colAddressDsc = roundedBalanceEthFromWei(colAddressDscWei, 18);
     } catch (error) {
       somethingsUp = true;
       transactionError = { error };
@@ -218,22 +229,6 @@
     } catch (error) {
       somethingsUp = true;
       transactionError = { error };
-    }
-  }
-
-  async function getTokenStatus() {
-    try {
-      tokenStatusId = await contractToLoad.getTokenState(
-        nftTokenSelectedStatus
-      );
-      if (tokenStatusId == 0) {
-        tokenStatus = "HAPPY";
-      } else {
-        tokenStatus = "SAD";
-      }
-      tokenStatus;
-    } catch (error) {
-      playerAddress = "Does not exist";
     }
   }
 
@@ -258,18 +253,43 @@
       tx = await contractToLoad.depositCollateralAndMintDSC(
         dmTokenCollateralAddress,
         dmAmountCollateral,
-        dmAmountDSCToMint
+        ethers.utils.parseUnits(dmAmountDSCToMint, "ether")
       );
       transactionReceipt = await tx.wait();
       somethingsUp = true;
-      //console.log("transactionReceipt: ", transactionReceipt)
       sendTransactionDepositAndMint = false;
-      //console.error("vgika transaction")
-      await refreshContractData();
     } catch (error) {
       somethingsUp = true;
       transactionError = { error };
       sendTransactionDepositAndMint = false;
+    }
+  }
+
+  async function RedeemAndBurn() {
+    try {
+      sendTransactionRedeemAndBurn = true;
+      let tx1, tx2;
+      let burnUsd = ethers.utils.parseUnits(rbAmountDSCToMint, "ether");
+      let burnCol = ethers.utils.parseUnits(rbAmountCollateral, "ether");
+      contractToLoadERC = await connectToContract(dscAddress, abiERC20);
+      tx1 = await contractToLoadERC.increaseAllowance(
+        selectedContract,
+        burnUsd
+      );
+      transactionReceipt = await tx1.wait();
+
+      tx2 = await contractToLoad.redeemCollateralForDsc(
+        rbTokenCollateralAddress,
+        burnCol,
+        burnUsd
+      );
+      transactionReceipt = await tx2.wait();
+      somethingsUp = true;
+      sendTransactionRedeemAndBurn = false;
+    } catch (error) {
+      somethingsUp = true;
+      transactionError = { error };
+      sendTransactionRedeemAndBurn = false;
     }
   }
 
@@ -290,11 +310,74 @@
       //console.log("transactionReceipt: ", transactionReceipt)
       sendTransactionDeposit = false;
       //console.error("vgika transaction")
-      await refreshContractData();
     } catch (error) {
       somethingsUp = true;
       transactionError = { error };
       sendTransactionDeposit = false;
+    }
+  }
+
+  async function redeem() {
+    try {
+      sendTransactionRedeem = true;
+      let tx;
+      tx = await contractToLoad.redeemCollateral(
+        rTokenCollateralAddress,
+        ethers.utils.parseUnits(rAmountCollateral, "ether")
+      );
+      transactionReceipt = await tx.wait();
+      somethingsUp = true;
+      //console.log("transactionReceipt: ", transactionReceipt)
+      sendTransactionRedeem = false;
+      //console.error("vgika transaction")
+    } catch (error) {
+      somethingsUp = true;
+      transactionError = { error };
+      sendTransactionRedeem = false;
+    }
+  }
+
+  async function mintDsc() {
+    try {
+      sendTransactionMint = true;
+      let tx;
+      tx = await contractToLoad.mintDSC(
+        ethers.utils.parseUnits(mintAmountDsc, "ether")
+      );
+      transactionReceipt = await tx.wait();
+      somethingsUp = true;
+      //console.log("transactionReceipt: ", transactionReceipt)
+      sendTransactionMint = false;
+      //console.error("vgika transaction")
+    } catch (error) {
+      somethingsUp = true;
+      transactionError = { error };
+      sendTransactionMint = false;
+    }
+  }
+
+  async function burnDscApproved() {
+    try {
+      sendTransactionBurn = true;
+      let tx1, tx2;
+      let burnUsd = ethers.utils.parseUnits(burnAmountDsc, "ether");
+      contractToLoadERC = await connectToContract(dscAddress, abiERC20);
+      tx1 = await contractToLoadERC.increaseAllowance(
+        selectedContract,
+        burnUsd
+      );
+      transactionReceipt = await tx1.wait();
+
+      tx2 = await contractToLoad.burnDsc(burnUsd);
+      transactionReceipt = await tx2.wait();
+      somethingsUp = true;
+      //console.log("transactionReceipt: ", transactionReceipt)
+      sendTransactionBurn = false;
+      //console.error("vgika transaction")
+    } catch (error) {
+      somethingsUp = true;
+      transactionError = { error };
+      sendTransactionBurn = false;
     }
   }
 
@@ -549,6 +632,30 @@
             </tr>
           </div>
           <div class="stat">
+            <div class="stat-title">Total Collateral (USD):</div>
+
+            <div class="stat-desc font-extrabold">
+              {colAddress} USD<br />
+              {colAddressDsc} saga USD
+            </div>
+            <tr>
+              <div class="join stat-actions">
+                <div>
+                  <input
+                    class="input input-bordered join-item"
+                    placeholder="Address"
+                    bind:value={colAddressToSearch}
+                  />
+                </div>
+              </div>
+              <div class="indicator stat-actions">
+                <button class="btn join-item btn-sm" on:click={getColUSD}
+                  >Search</button
+                >
+              </div>
+            </tr>
+          </div>
+          <div class="stat">
             <div class="stat-title">Health Factor:</div>
 
             <div class="stat-desc font-extrabold">
@@ -602,51 +709,8 @@
               </div>
             </tr>
           </div>
-          <div class="stat">
-            <div class="stat-figure text-secondary">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                class="inline-block w-8 h-8 stroke-current"
-                ><path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                /></svg
-              >
-            </div>
-            <div class="stat-title">Token Status</div>
-            <div class="stat-desc font-extrabold">
-              {tokenStatus}
-            </div>
-            <tr>
-              <div class="h-1 m-1" />
-            </tr>
-            <div class="stat-desc">
-              Token:
-              <select
-                class="select select-info w-full max-w-xs"
-                bind:value={nftTokenSelectedStatus}
-                on:change={() => {
-                  //dispatch("contractSelected", selectedContract)
-                  getTokenStatus();
-                }}
-              >
-                <option disabled selected>Token</option>
-                {#if nftTokenCounter > 0}
-                  {#each Array(nftTokenCounter) as _, nftTokenSelectedStatus}
-                    <option value={nftTokenSelectedStatus}
-                      >{nftTokenSelectedStatus}</option
-                    >
-                  {/each}
-                {/if}
-              </select>
-            </div>
-          </div>
-        </div></tr
-      >
+        </div>
+      </tr>
       <tr>
         <div class="h-1 m-1" />
       </tr>
@@ -686,6 +750,104 @@
               {#if !sendTransactionDeposit}
                 <button id="fundMeBtn" class="btn join-item" on:click={deposit}
                   >Deposit</button
+                >
+              {:else}
+                <button class="btn join-item">
+                  <svg class="spinner" viewBox="0 0 40 40">
+                    <circle cx="20" cy="20" r="18" />
+                  </svg>
+                </button>
+              {/if}
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-title">Redeem Collateral</div>
+            <div class="join stat-actions">
+              <div>
+                <input
+                  class="input input-bordered join-item"
+                  placeholder="Collateral (Eth/Btc)"
+                  bind:value={rAmountCollateral}
+                />
+              </div>
+            </div>
+            <div class="stat-desc">
+              <select
+                class="select select-primary w-full max-w-xs"
+                bind:value={rTokenCollateralAddress}
+              >
+                <option disabled selected>Collateral To Use</option>
+                {#each collateralTokens as rTokenCollateralAddress}
+                  {#if rTokenCollateralAddress == 0x2b77278636a67550108a4ae30b89401a9758a983}
+                    <option value={rTokenCollateralAddress}>Wrapped Eth</option>
+                  {:else if rTokenCollateralAddress == 0x22c3e8695ccf9bdcb134ebbceac653ce7d6e1e76}
+                    <option value={rTokenCollateralAddress}>Wrapped Btc</option>
+                  {:else}
+                    <option value={rTokenCollateralAddress}
+                      >{rTokenCollateralAddress}</option
+                    >
+                  {/if}
+                {/each}
+              </select>
+            </div>
+            <div>
+              {#if !sendTransactionRedeem}
+                <button id="fundMeBtn" class="btn join-item" on:click={redeem}
+                  >Redeem</button
+                >
+              {:else}
+                <button class="btn join-item">
+                  <svg class="spinner" viewBox="0 0 40 40">
+                    <circle cx="20" cy="20" r="18" />
+                  </svg>
+                </button>
+              {/if}
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-title">Mint SSUSD</div>
+            <div class="join stat-actions">
+              <div>
+                <input
+                  class="input input-bordered join-item"
+                  placeholder="MINT SSUSDs"
+                  bind:value={mintAmountDsc}
+                />
+              </div>
+            </div>
+
+            <div>
+              {#if !sendTransactionMint}
+                <button id="fundMeBtn" class="btn join-item" on:click={mintDsc}
+                  >MINT</button
+                >
+              {:else}
+                <button class="btn join-item">
+                  <svg class="spinner" viewBox="0 0 40 40">
+                    <circle cx="20" cy="20" r="18" />
+                  </svg>
+                </button>
+              {/if}
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-title">Burn SSUSD</div>
+            <div class="join stat-actions">
+              <div>
+                <input
+                  class="input input-bordered join-item"
+                  placeholder="BURN SSUSDs"
+                  bind:value={burnAmountDsc}
+                />
+              </div>
+            </div>
+
+            <div>
+              {#if !sendTransactionBurn}
+                <button
+                  id="fundMeBtn"
+                  class="btn join-item"
+                  on:click={burnDscApproved}>BURN</button
                 >
               {:else}
                 <button class="btn join-item">
@@ -750,31 +912,51 @@
             </div>
           </div>
           <div class="stat">
-            <div class="stat-title">Change Mood</div>
-            <tr>
-              <div class="h-1 m-1" />
-            </tr>
-            <select
-              class="select select-bordered"
-              bind:value={nftTokenSelectedChangeState}
-            >
-              <option disabled selected>Token Id</option>
-              {#if nftTokenCounter > 0}
-                {#each Array(nftTokenCounter) as _, nftTokenSelectedChangeState}
-                  <option value={nftTokenSelectedChangeState}
-                    >{nftTokenSelectedChangeState}</option
-                  >
+            <div class="stat-title">Redeem Collateral and Burn SSUSD</div>
+            <div class="join stat-actions">
+              <div>
+                <input
+                  class="input input-bordered join-item"
+                  placeholder="Collateral (Eth/Btc)"
+                  bind:value={rbAmountCollateral}
+                />
+                <input
+                  class="input input-bordered join-item"
+                  placeholder="StableCoin Mint"
+                  bind:value={rbAmountDSCToMint}
+                />
+              </div>
+            </div>
+            <div class="stat-desc">
+              <select
+                class="select select-primary w-full max-w-xs"
+                bind:value={rbTokenCollateralAddress}
+              >
+                <option disabled selected>Collateral To Use</option>
+                {#each collateralTokens as rbTokenCollateralAddress}
+                  {#if rbTokenCollateralAddress == 0x2b77278636a67550108a4ae30b89401a9758a983}
+                    <option value={rbTokenCollateralAddress}>Wrapped Eth</option
+                    >
+                  {:else if rbTokenCollateralAddress == 0x22c3e8695ccf9bdcb134ebbceac653ce7d6e1e76}
+                    <option value={rbTokenCollateralAddress}>Wrapped Btc</option
+                    >
+                  {:else}
+                    <option value={rbTokenCollateralAddress}
+                      >{rbTokenCollateralAddress}</option
+                    >
+                  {/if}
                 {/each}
-              {/if}
-            </select>
-            <tr>
-              <div class="h-1 m-1" />
-            </tr>
-            <div class="indicator">
-              {#if !sendTransactionTransferChangeMood}
-                <button class="btn" on:click={changeMood}>Change</button>
+              </select>
+            </div>
+            <div>
+              {#if !sendTransactionRedeemAndBurn}
+                <button
+                  id="fundMeBtn"
+                  class="btn join-item"
+                  on:click={RedeemAndBurn}>Redeem And Burn</button
+                >
               {:else}
-                <button class="btn ">
+                <button class="btn join-item">
                   <svg class="spinner" viewBox="0 0 40 40">
                     <circle cx="20" cy="20" r="18" />
                   </svg>
